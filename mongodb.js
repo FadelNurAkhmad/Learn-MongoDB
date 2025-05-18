@@ -113,3 +113,57 @@ db.products.find({
     },
   ],
 });
+
+// select * from products where category in ('handphone', 'laptop') and price > 20000000
+db.products.find({
+  $and: [
+    { category: { $in: ["handphone", "laptop"] } },
+    { price: { $gt: 20000000 } },
+  ],
+});
+
+// select * from products where category not in ('handphone', 'laptop')
+db.products.find({
+  category: {
+    $not: { $in: ["handphone", "laptop"] },
+  },
+});
+
+// select * from products where price between 10000000 and 20000000 and category ≠ 'food'
+db.products.find({
+  price: {
+    $gte: 10000000,
+    $lte: 20000000,
+  },
+  category: {
+    $ne: "food",
+  },
+});
+
+// select * from products where category is not null
+db.products.find({
+  category: {
+    $exists: true,
+  },
+});
+
+// select * from products where category is null
+db.products.find({
+  category: {
+    $exists: false,
+  },
+});
+
+// select * from products where type(category) = 'string'
+db.products.find({
+  category: {
+    $type: "string",
+  },
+});
+
+// select * from products where type(price) in ('int', 'long')
+db.products.find({
+  price: {
+    $type: ["int", "long"],
+  },
+});
