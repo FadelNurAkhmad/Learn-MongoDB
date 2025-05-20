@@ -362,3 +362,81 @@ db.products.find({}).sort({
   category: 1,
   name: -1,
 });
+
+// update one syntax
+db.customers.updateOne(
+  {}, // filter
+  {}, // update
+  {} // options
+);
+
+// update many syntax
+db.customers.updateMany(
+  {}, // filter
+  {}, // update
+  {} // options
+);
+
+// replace one syntax
+db.customers.replaceOne(
+  {}, // filter
+  {}, // update
+  {} // options
+);
+
+// update products set category = "food" where _id = 1
+db.products.updateOne(
+  {
+    _id: 1,
+  },
+  {
+    $set: {
+      category: "food",
+    },
+  }
+);
+
+// update products set category = "food" where _id = 2
+db.products.updateOne(
+  {
+    _id: 2,
+  },
+  {
+    $set: {
+      category: "food",
+    },
+  }
+);
+
+// update products set tags = ["food"] where category = "food" and tags is null
+db.products.updateMany(
+  {
+    $and: [{ category: { $eq: "food" } }, { tags: { $exists: false } }],
+  },
+  {
+    $set: {
+      tags: ["food"],
+    },
+  }
+);
+
+// insert wrong document
+db.products.insertOne({
+  _id: 9,
+  name: "Ups Salah",
+  wrong: "Salah Lagi",
+});
+
+// replaceOne() Mengubah total satu document dengan document baru
+// replace document with id 9
+db.products.replaceOne(
+  {
+    _id: 9,
+  },
+  {
+    name: "Adidas Sepatu Lari Pria",
+    price: new NumberLong("1100000"),
+    category: "shoes",
+    tags: ["adidas", "shoes", "running"],
+  }
+);
