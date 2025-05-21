@@ -440,3 +440,305 @@ db.products.replaceOne(
     tags: ["adidas", "shoes", "running"],
   }
 );
+
+// update products set stock = 0
+db.products.updateMany(
+  {},
+  {
+    $set: {
+      stock: 0,
+    },
+  }
+);
+
+// update products set stock = stock + 10, $inc = increment, use -1xx untuk mengurangi
+db.products.updateMany(
+  {},
+  {
+    $inc: {
+      stock: 10,
+    },
+  }
+);
+
+// alter table customers change name to full_name
+db.customers.updateMany(
+  {},
+  {
+    $rename: {
+      name: "full_name",
+    },
+  }
+);
+
+// update customers set wrong = 'Ups'
+db.customers.updateMany(
+  {},
+  {
+    $set: {
+      wrong: "ups",
+    },
+  }
+);
+
+// alter table customers drop column wrong
+db.customers.updateMany(
+  {},
+  {
+    $unset: {
+      wrong: "",
+    },
+  }
+);
+
+// update products set lastModifiedDate = current_date()
+db.products.updateMany(
+  {},
+  {
+    $currentDate: {
+      lastModifiedDate: {
+        $type: "date",
+      },
+    },
+  }
+);
+
+// update products set ratings = [90, 80, 70]
+db.products.updateMany(
+  {},
+  {
+    $set: {
+      ratings: [90, 80, 70],
+    },
+  }
+);
+
+// update first element of array, query must include array fields, Array $ Operator
+db.products.updateMany(
+  {
+    ratings: 90,
+  },
+  {
+    $set: {
+      "ratings.$": 100,
+    },
+  }
+);
+
+// update all element of array to 100, Array $[] Operator
+db.products.updateMany(
+  {},
+  {
+    $set: {
+      "ratings.$[]": 100,
+    },
+  }
+);
+
+// update products set ratings = [90, 80, 70]
+db.products.updateMany(
+  {},
+  {
+    $set: {
+      ratings: [90, 80, 70],
+    },
+  }
+);
+
+// update element of array based on arrayFilters, Array $[<identifier>] Operator
+db.products.updateMany(
+  {},
+  {
+    $set: {
+      "ratings.$[element]": 100,
+    },
+  },
+  {
+    arrayFilters: [{ element: { $gte: 80 } }],
+  }
+);
+
+// update element of array with given index, Array <index> Operator
+db.products.updateMany(
+  {},
+  {
+    $set: {
+      "ratings.0": 50,
+      "ratings.1": 60,
+    },
+  }
+);
+
+// add "popular" to array if not exists, Array $addToSet Operator
+db.products.updateOne(
+  {
+    _id: 1,
+  },
+  {
+    $addToSet: {
+      tags: "popular",
+    },
+  }
+);
+
+db.products.find({ _id: 1 });
+
+// remove first element of array, Array $pop Operator
+db.products.updateOne(
+  {
+    _id: 1,
+  },
+  {
+    $pop: {
+      ratings: -1,
+    },
+  }
+);
+
+db.products.find({ _id: 2 });
+
+// remove last element of array, Array $pop Operator
+db.products.updateOne(
+  {
+    _id: 2,
+  },
+  {
+    $pop: {
+      ratings: 1,
+    },
+  }
+);
+
+// update products set ratings = [90, 80, 70]
+db.products.updateMany(
+  {},
+  {
+    $set: {
+      ratings: [90, 80, 70],
+    },
+  }
+);
+
+// Array $pull, $push dan $pushAll Operator
+// remove all element where ratings >= 80
+db.products.updateMany(
+  {},
+  {
+    $pull: {
+      ratings: {
+        $gte: 80,
+      },
+    },
+  }
+);
+
+db.products.find();
+
+// add 100 to ratings
+db.products.updateMany(
+  {},
+  {
+    $push: {
+      ratings: 100,
+    },
+  }
+);
+
+// add 100 to ratings
+db.products.updateMany(
+  {},
+  {
+    $push: {
+      ratings: 0,
+    },
+  }
+);
+
+// remove element 100
+db.products.updateMany(
+  {},
+  {
+    $pullAll: {
+      ratings: [100, 0],
+    },
+  }
+);
+
+// add 100, 200, 300 to ratings, $each untuk menambahkan multiple element
+db.products.updateMany(
+  {},
+  {
+    $push: {
+      ratings: {
+        $each: [100, 200, 300],
+      },
+    },
+  }
+);
+
+// add trending, popular to tags, $each untuk menambahkan multiple element
+db.products.updateMany(
+  {},
+  {
+    $addToSet: {
+      tags: {
+        $each: ["trending", "popular"],
+      },
+    },
+  }
+);
+
+// add "hot" in position 1
+db.products.updateMany(
+  {},
+  {
+    $push: {
+      tags: {
+        $each: ["hot"],
+        $position: 1,
+      },
+    },
+  }
+);
+
+db.products.find();
+
+// add all elements, and sort descending
+db.products.updateMany(
+  {},
+  {
+    $push: {
+      ratings: {
+        $each: [100, 200, 300, 400, 500],
+        $sort: -1,
+      },
+    },
+  }
+);
+
+// add all elements, but limit with slice from behind
+db.products.updateMany(
+  {},
+  {
+    $push: {
+      ratings: {
+        $each: [100, 200, 300, 400, 500],
+        $slice: -3,
+      },
+    },
+  }
+);
+
+// add all elements, and sort descending, but limit with slice from front
+db.products.updateMany(
+  {},
+  {
+    $push: {
+      ratings: {
+        $each: [100, 200, 300, 400, 500],
+        $slice: 10,
+        $sort: -1,
+      },
+    },
+  }
+);
