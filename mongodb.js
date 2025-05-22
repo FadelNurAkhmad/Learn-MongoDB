@@ -357,7 +357,7 @@ db.products.find({}).skip(2);
 // select * from products limit 4 offset 2
 db.products.find({}).limit(4).skip(2);
 
-// select * from products order by category asc, name desc
+// select * from products order by category asc : 1, name desc : -1
 db.products.find({}).sort({
   category: 1,
   name: -1,
@@ -742,3 +742,165 @@ db.products.updateMany(
     },
   }
 );
+
+// Insert spammer document
+db.customers.insertOne({
+  _id: "spammer",
+  full_name: "Spammer",
+});
+
+// Delete document by _id
+db.customers.deleteOne({
+  _id: "spammer",
+});
+
+// Insert many spammer documents
+db.customers.insertMany([
+  {
+    _id: "spammer1",
+    full_name: "Spammer1",
+  },
+  {
+    _id: "spammer2",
+    full_name: "Spammer2",
+  },
+  {
+    _id: "spammer3",
+    full_name: "Spammer3",
+  },
+]);
+
+// Delete many documents, where id like "%spammer%"
+db.customers.deleteMany({
+  _id: {
+    $regex: "spammer",
+  },
+});
+
+// bulkWrite(), Melakukan operasi write (insert, update, delete) banyak secara sekaligus
+
+db.customers.bulkWrite([
+  {
+    insertOne: {
+      document: {
+        _id: "rarjo",
+        full_name: "Rarjo",
+      },
+    },
+  },
+  {
+    insertOne: {
+      document: {
+        _id: "raharjo",
+        full_name: "Raharjo",
+      },
+    },
+  },
+  {
+    updateMany: {
+      filter: {
+        _id: {
+          $in: ["parjo", "rarjo", "raharjo"],
+        },
+      },
+      update: {
+        $set: {
+          full_name: "Parjo Raharjo",
+        },
+      },
+    },
+  },
+]);
+
+// Create index at category in products collection, 1 untuk ascending
+db.products.createIndex({
+  category: 1,
+});
+
+// Get all indexes in products collection
+db.products.getIndexes();
+
+// Menghapus index di collection
+db.products.dropIndex("category_1");
+
+// Find products by category (will use index)
+db.products.find({
+  category: "food",
+});
+
+// debugging with index, stage: 'IXSCAN' is use index
+db.products
+  .find({
+    category: "food",
+  })
+  .explain();
+
+db.products
+  .find({})
+  .sort({
+    category: 1,
+  })
+  .explain();
+
+// debugging without index, stage: 'COLLSCAN', is not use index
+db.products
+  .find({
+    tag: "Laptop",
+  })
+  .explain();
+
+// Create index at stock and tags in products collection, Compound Indexes
+// index name : stock_1_tags_1
+// Jika kita buat compound index (a, b, c),
+// artinya kisa bisa mencari menggunakan query a, a b, dan a b c
+
+db.products.createIndex({
+  stock: 1,
+  tags: 1,
+});
+
+// Get all indexes in products collection
+db.products.getIndexes();
+
+// Find products by stock and tags (will use index)
+db.products.find({
+  stock: 10,
+  tags: "popular",
+});
+
+// debug with index
+// stage: 'IXSCAN',
+db.products
+  .find({
+    stock: 10,
+  })
+  .explain();
+
+// stage: 'IXSCAN',
+db.products
+  .find({
+    stock: 10,
+    tags: "popular",
+  })
+  .explain();
+
+// Find : stock or stock, tags = use index
+// F
+//
+// ind : tags or name, stock = not use index
+
+// debug without index
+// stage: 'COLLSCAN',
+db.products
+  .find({
+    tags: "popular",
+  })
+  .explain();
+
+// stage: 'COLLSCAN',
+db.products
+  .find({
+    name: "samsung",
+    tags: "popular",
+  })
+  .explain();
