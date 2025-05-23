@@ -214,6 +214,7 @@ db.products.find({
 });
 
 // select * from products where name like "%mie%"
+// i : Regex menjadi incase sensitive, akan mencari baik itu huruf besar atau kecil
 db.products.find({
   name: {
     $regex: /mie/,
@@ -904,3 +905,257 @@ db.products
     tags: "popular",
   })
   .explain();
+
+// Text Index
+// create index text
+db.products.createIndex(
+  {
+    name: "text",
+    category: "text",
+    tags: "text",
+  },
+  {
+    weights: {
+      name: 10,
+      category: 5,
+      tags: 1,
+    },
+  }
+);
+// Weight, bobot untuk prioritas pencarian
+
+// get index
+db.products.getIndexes();
+
+// search use text index
+// search products with text "mie"
+db.products.find({
+  $text: {
+    $search: "mie",
+  },
+});
+
+// search products with text "mie" OR "laptop"
+db.products.find({
+  $text: {
+    $search: "mie laptop",
+  },
+});
+
+// search products with text "mie sedap"
+db.products.find({
+  $text: {
+    $search: '"mie sedap"',
+  },
+});
+
+// search products with text "mie" and NOT "sedap"
+db.products.find({
+  $text: {
+    $search: "mie -sedap",
+  },
+});
+
+// Debugging query optimization
+db.products
+  .find({
+    $text: {
+      $search: "mie -sedap",
+    },
+  })
+  .explain();
+
+// Meta Operator
+db.products.find(
+  {
+    $text: {
+      $search: "mie",
+    },
+  },
+  {
+    searchScore: {
+      $meta: "textScore",
+    },
+  }
+);
+
+// membuat wildcard index
+db.customers.createIndex({
+  "customFields.$**": 1,
+});
+
+// mengambil index
+db.customers.getIndexes();
+
+// Insert many customers
+db.customers.insertMany([
+  {
+    _id: "budi",
+    full_name: "Budi",
+    customFields: {
+      hobby: "Gaming",
+      university: "Universitas Belum Ada",
+    },
+  },
+  {
+    _id: "rully",
+    full_name: "Rully",
+    customFields: {
+      ipk: 3.2,
+      university: "Universitas Belum Ada",
+    },
+  },
+  {
+    _id: "rudi",
+    full_name: "Rudi",
+    customFields: {
+      motherName: "Tini",
+      passion: "Enterpreneur",
+    },
+  },
+]);
+
+// Debug wildcard index
+db.customers
+  .find({
+    "customFields.passion": "Enterpreneur",
+  })
+  .explain();
+
+db.customers
+  .find({
+    "customFields.ipk": 3.2,
+  })
+  .explain();
+
+db.customers
+  .find({
+    "customFields.hobby": "Gaming",
+  })
+  .explain();
+
+// TTL singkatan dari Time To Live, yaitu waktu untuk hidup
+// Proses background tersebut berjalan setiap 60 detik sekali
+// Create session collection
+db.createCollection("sessions");
+
+// create TTL index
+db.sessions.createIndex(
+  {
+    createdAt: 1,
+  },
+  {
+    expireAfterSeconds: 10,
+  }
+);
+
+// mengambil index
+db.sessions.getIndexes();
+
+// Will expire after 10 seconds, but background job runs every 60 seconds
+db.sessions.insertOne({
+  _id: 1,
+  session: "Session 1",
+  createdAt: new Date(),
+});
+
+// Unique Index memastikan bahwa field-field di index tersebut tidak menyimpan data duplicate
+// Create unique index in email
+// sparse : untuk mengabaikan apabila terdapat data NULL
+db.customers.createIndex(
+  {
+    email: 1,
+  },
+  {
+    unique: true,
+    sparse: true,
+  }
+);
+
+db.customers.getIndexes();
+
+// update customers set email = ? where _id = ?
+db.customers.updateOne(
+  {
+    _id: "parjo",
+  },
+  {
+    $set: {
+      email: "parjo@example.com",
+    },
+  }
+);
+
+// error duplicate email
+db.customers.updateOne(
+  {
+    _id: "joko",
+  },
+  {
+    $set: {
+      email: "parjo@example.com",
+    },
+  }
+);
+
+// Create unique index in full_name
+// Case Insensitive -> strength: 2, case sensitive -> strength : 1,
+// Default, saat kita membuat index, maka data akan disimpan sebagai case sensitive
+db.customers.createIndex(
+  {
+    full_name: 1,
+  },
+  {
+    collation: {
+      locale: "en",
+      strength: 2,
+    },
+  }
+);
+
+// not using index
+db.customers.find({
+  full_name: "parjo Raharjo",
+});
+
+// using index, Case Insensitive -> strength: 2
+db.customers
+  .find({
+    full_name: "PARJO RAHARJO",
+  })
+  .collation({
+    locale: "en",
+    strength: 2,
+  });
+
+// Partial : agar index hanya digunakan ketika kita menggunakan kriteria tertentu ketika melakukan query
+// create partial index
+db.products.createIndex(
+  {
+    price: 1,
+  },
+  {
+    partialFilterExpression: {
+      stock: {
+        $gt: 0,
+      },
+    },
+  }
+);
+
+db.products.getIndexes();
+
+// not use partial index
+db.products.find({
+  price: 2500,
+});
+
+// debug query with partial index
+db.products.find({
+  price: {
+    $eq: 2500,
+  },
+  stock: {
+    $gt: 0,
+  },
+});
