@@ -1159,3 +1159,123 @@ db.products.find({
     $gt: 0,
   },
 });
+
+// Admin User Security
+// switch to database admin
+use admin;
+
+// create admin user
+db.createUser({
+  user: 'mongo',
+  pwd: 'mongo',
+  roles: [
+    'userAdminAnyDatabase',
+    'readWriteAnyDatabase'
+  ]
+});
+
+"./bin/mongod --auth --dbpath=lokasi/data/"
+"./bin/mongosh mongodb://mongo:mongo@localhost:27017/belajar?authSource=admin"
+
+use admin;
+
+// Create user with access read only
+db.createUser({
+  user: "contoh",
+  pwd: "contoh",
+  roles: [
+    { role: "read", db: "test" }
+  ]
+});
+
+// Create user with access read write
+db.createUser({
+  user: "contoh2",
+  pwd: "Contoh2",
+  roles: [
+    { role: "readWrite", db: "test" }
+  ]
+});
+
+"mongodb://contoh:contoh@localhost:27017/test?authSource=admin"
+
+"mongodb://contoh2:Contoh2@localhost:27017/test?authSource=admin"
+
+// Get all users
+db.getUsers();
+
+// Change password for user contoh
+db.changeUserPassword("contoh", "rahasia");
+"mongodb://contoh:rahasia@localhost:27017/test?authSource=admin"
+
+db.changeUserPassword("contoh2", "contoh2");
+"mongodb://contoh2:contoh2@localhost:27017/test?authSource=admin"
+
+// Drop user contoh
+db.dropUser("contoh");
+
+// Update user
+db.updateUser("contoh2", {
+  roles: [
+    { role: "readWrite", db: "test" },
+    { role: "readWrite", db: "belajar" }
+  ]
+});
+
+// Role
+// create role with custom privileges
+db.createRole({
+  role: "session_management",
+  privileges: [
+    {
+      resource: {
+        db: "belajar",
+        collection: "sessions"
+      },
+      actions: ["insert"]
+    }
+  ],
+  roles: [
+    {
+      role: "read",
+      db: "belajar"
+    }
+  ]
+});
+
+// show all roles with privileges
+db.getRoles({ showPrivileges: true });
+
+// create user with custom role
+db.createUser({
+  user: "parjo",
+  pwd: "parjo",
+  roles: ["session_management"]
+});
+
+"mongodb://parjo:parjo@localhost:27017/belajar?authSource=admin"
+
+// login using user parjo
+// find sessions (success)
+// only access collection "sessions"
+db.sessions.find();
+
+// insert session (success)
+db.sessions.insertOne({
+  _id: "test",
+  name: "test"
+});
+
+// delete session (error)
+db.sessions.deleteOne({
+  _id: "test"
+});
+
+// update session (error)
+db.sessions.updateOne({
+  _id: "test"
+}, {
+  $set: {
+    name: "ubah"
+  }
+});
